@@ -1,22 +1,15 @@
 from fastapi import Depends, FastAPI, HTTPException, UploadFile, File, status
 from fastapi.responses import FileResponse
-
+import pytesseract
 import pathlib, io, uuid, os
 from PIL import Image
-
 from .config import Settings, get_settings
 
 app = FastAPI()
 
 settings = get_settings()
-
 BASE_DIR = pathlib.Path(__file__).parent
-
 UPLOAD_DIR = pathlib.Path.joinpath(BASE_DIR, "upload")
-
-if not os.path.exists(UPLOAD_DIR):
-    os.mkdir(UPLOAD_DIR)
-
 DEBUG = settings.DEBUG
 
 @app.get("/")
@@ -24,8 +17,16 @@ def hello():
     return {"Hello": "World"}
 
 @app.post("/")
-def hello_post():
-    return {"message": "Hello World"}
+async def make_predictions(file: UploadFile = File(...), settings: Settings = Depends(get_settings)):
+    bytes_str = io.BytesIO(await file.read())
+    try:
+        img = Image.open(bytes_str)
+    except:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid Image")
+    pred = pytesseract.image_to_string(img)
+    predictions = [x for x in pred.strip().split("\n")]
+    return {"data": predictions, "original": pred}
+
 
 
 @app.post("/image-echo", response_class=FileResponse)
