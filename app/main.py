@@ -2,6 +2,7 @@ from fastapi import Depends, FastAPI, HTTPException, UploadFile, File, status
 from fastapi.responses import FileResponse
 
 import pathlib, io, uuid, os
+from PIL import Image
 
 from .config import Settings, get_settings
 
@@ -34,9 +35,13 @@ async def image_echo_view(file: UploadFile = File(...), settings: Settings = Dep
     if not settings.ECHO_ACTIVE:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid Endpoint")
     bytes_str = io.BytesIO(await file.read())
+    try:
+        img = Image.open(bytes_str)
+    except:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid Image")
+
     fname = pathlib.Path(file.filename)
     fext = fname.suffix
     dest = UPLOAD_DIR / f"{uuid.uuid1()}{fext}"
-    with open(dest, "wb") as f:
-        f.write(bytes_str.read())
+    img.save(dest)
     return dest
