@@ -3,6 +3,7 @@ from functools import lru_cache
 
 class Settings(BaseSettings):
     DEBUG: bool = False
+    ECHO_ACTIVE: bool = False
 
     class Config:
         env_file = ".env"
