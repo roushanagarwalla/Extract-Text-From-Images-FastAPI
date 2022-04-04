@@ -1,4 +1,4 @@
-from fastapi import Depends, FastAPI, HTTPException, UploadFile, File, status
+from fastapi import Depends, FastAPI, HTTPException, Header, UploadFile, File, status
 from fastapi.responses import FileResponse
 import pytesseract
 import pathlib, io, uuid, os
@@ -16,8 +16,24 @@ DEBUG = settings.DEBUG
 def hello():
     return {"Hello": "World"}
 
+def verify_auth(authorization: Header(None), settings: Settings = Depends(get_settings)):
+    if settings.SKIP_AUTH and settings.DEBUG:
+        return
+    if authorization is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Authorization")
+
+    try:
+        label, token = authorization.split()
+    except:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Either label or Token is missing")
+
+    if token != settings.AUTH_TOKEN:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Authorization")
+
+
 @app.post("/")
-async def make_predictions(file: UploadFile = File(...), settings: Settings = Depends(get_settings)):
+async def make_predictions(file: UploadFile = File(...), authorization_token = Header(None), settings: Settings = Depends(get_settings)):
+    verify_auth(authorization_token, settings)
     bytes_str = io.BytesIO(await file.read())
     try:
         img = Image.open(bytes_str)
@@ -26,7 +42,6 @@ async def make_predictions(file: UploadFile = File(...), settings: Settings = De
     pred = pytesseract.image_to_string(img)
     predictions = [x for x in pred.strip().split("\n")]
     return {"data": predictions, "original": pred}
-
 
 
 @app.post("/image-echo", response_class=FileResponse)

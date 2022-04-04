@@ -44,7 +44,10 @@ def test_predictions():
     assert response.status_code == 422
     images_path = BASE_DIR / "test_data" / "images"
     for path in images_path.glob("*"):
-        response = client.post("/", files={"file": open(path, "rb")})
+        response = client.post("/",
+                               files={"file": open(path, "rb")},
+                               headers={"authorization-token": f"JWT {settings.AUTH_TOKEN}"},
+                               )
         try:
             img = Image.open(path)
         except:
@@ -56,3 +59,16 @@ def test_predictions():
             assert response.status_code == 200
             assert response.headers['content-type'] == "application/json"
             assert len(response.json().keys()) == 2
+
+
+def test_predictions_invalid():
+    images_path = BASE_DIR / "test_data" / "images"
+    for path in images_path.glob("*"):
+        response = client.post("/",
+                               files={"file": open(path, "rb")},
+                               )
+        try:
+            img = Image.open(path)
+        except:
+            img = None
+        assert response.status_code == 401
