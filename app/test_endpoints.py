@@ -1,4 +1,3 @@
-import io
 from fastapi.testclient import TestClient
 from app.main import app
 import pathlib
@@ -17,7 +16,6 @@ def test_get_home():
     response = client.get("/")
     assert response.status_code == 200
     assert response.headers['content-type'] == "application/json"
-    assert response.json() == {"Hello": "World"}
 
 def test_echo_images():
     if settings.ECHO_ACTIVE:
