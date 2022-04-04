@@ -29,6 +29,8 @@ def hello_post():
 
 @app.post("/image-echo", response_class=FileResponse)
 async def image_echo_view(file: UploadFile = File(...), settings: Settings = Depends(get_settings)):
+    if not os.path.exists(UPLOAD_DIR):
+        os.mkdir(UPLOAD_DIR)
     if not settings.ECHO_ACTIVE:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid Endpoint")
     bytes_str = io.BytesIO(await file.read())
