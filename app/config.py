@@ -4,7 +4,7 @@ from functools import lru_cache
 class Settings(BaseSettings):
     DEBUG: bool = False
     ECHO_ACTIVE: bool = False
-    AUTH_TOKEN: str = None
+    AUTH_TOKEN: str = "SPEWRsr0edwapIvgdWlKOlrXoxbcREzuSerQaTMZJ05W01c0E2Mgq-ULrRYSsjwrnZLIj4LNZ4qhC2rQCUVu5Q"
     SKIP_AUTH: bool = 0
 
     class Config:
